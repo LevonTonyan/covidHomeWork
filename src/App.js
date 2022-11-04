@@ -5,6 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
+import CircularProgress from '@mui/material/CircularProgress';
 
 class App extends React.Component {
   constructor(props) {
@@ -73,6 +74,7 @@ class App extends React.Component {
     this.state = {
       data: [],
       currentState: 0,
+      isLoading:false
     };
   }
 
@@ -84,6 +86,7 @@ class App extends React.Component {
   }
 
   nextButtonHandler(e) {
+    this.setState({ isLoading:true });
     let index = this.state.currentState + (e.target.id === "next" ? 1 : -1);
     if (index < 0) {
       index = this.stateList.length - 1;
@@ -92,14 +95,14 @@ class App extends React.Component {
     }
     axios
       .get(
-        `https://api.covidtracking.com/v1/states/${this.stateList[index].toLowerCase()}/daily.json`).then((res) => this.setState({ data: res.data, currentState: index }));
+        `https://api.covidtracking.com/v1/states/${this.stateList[index].toLowerCase()}/daily.json`).then((res) => this.setState({ data: res.data, currentState: index, isLoading:false }));
   }
 
   render() {
     return (
       <div className="App">
-        <Typography variant="h4" sx={{ color: "blue" }}>
-          {`State: ${this.stateList[this.state.currentState]}`}
+        <Typography variant="h4" sx={{ color: "blue", marginLeft:"400px" }} >
+          {this.state.isLoading?<CircularProgress/>:this.stateList[this.state.currentState]}
         </Typography>
         <div className="ag-theme-alpine" style={{ height: 700, width: 900 }}>
           <AgGridReact
@@ -107,7 +110,7 @@ class App extends React.Component {
             columnDefs={this.columnDefs}
           ></AgGridReact>
         </div>
-
+        
         <div className="btnContainer">
           <Button
             variant="contained"
