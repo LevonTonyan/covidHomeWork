@@ -1,16 +1,16 @@
 import React from "react";
-import { Button, Typography } from "@mui/material";
+import {LineChart, Line, XAxis, YAxis, CartesianGrid} from 'recharts'
 import "./App.css";
-import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
-import CircularProgress from '@mui/material/CircularProgress';
+
+import { Button, Typography,CircularProgress } from '@mui/material';
+
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.nextButtonHandler = this.nextButtonHandler.bind(this);
     this.stateList = [
       "AL",
       "AK",
@@ -64,12 +64,7 @@ class App extends React.Component {
       "WY",
     ];
 
-    this.columnDefs = [
-      { field: "date" },
-      { field: "positive" },
-      { field: "probableCases" },
-      { field: "negative" },
-    ];
+    this.nextButtonHandler = this.nextButtonHandler.bind(this);
 
     this.state = {
       data: [],
@@ -82,9 +77,14 @@ class App extends React.Component {
     axios
       .get(
         `https://api.covidtracking.com/v1/states/${this.stateList[
-          this.state.currentState].toLowerCase()}/daily.json`).then((res) => this.setState({ data: res.data }));
+          this.state.currentState].toLowerCase()}/daily.json`).then((r) => {
+            let data = [];
+            for(let i=0;i<r.data.length;i+=40){
+              data.push(r.data[i])
+            }
+            this.setState({data:data})
+          })
   }
-
   nextButtonHandler(e) {
     this.setState({ isLoading:true });
     let index = this.state.currentState + (e.target.id === "next" ? 1 : -1);
@@ -93,26 +93,41 @@ class App extends React.Component {
     } else if (index >= this.stateList.length) {
       index = 0;
     }
+    console.log(index)
     axios
       .get(
-        `https://api.covidtracking.com/v1/states/${this.stateList[index].toLowerCase()}/daily.json`).then((res) => this.setState({ data: res.data, currentState: index, isLoading:false }));
+        `https://api.covidtracking.com/v1/states/${this.stateList[index].toLowerCase()}/daily.json`).then((r) => {
+          let data = [];
+          for(let i=0;i<r.data.length;i+=40){
+            data.push(r.data[i])
+          }
+          this.setState({data:data, currentState:index, isLoading:false})
+        })
+        
   }
 
+
   render() {
+  
     return (
       <div className="App">
-        <Typography variant="h4" sx={{ color: "blue", marginLeft:"400px" }} >
+         <Typography variant="h4" sx={{ color: "blue", marginLeft:"400px" }} >
           {this.state.isLoading?<CircularProgress/>:this.stateList[this.state.currentState]}
         </Typography>
-        <div className="ag-theme-alpine" style={{ height: 700, width: 900 }}>
-          <AgGridReact
-            rowData={this.state.data}
-            columnDefs={this.columnDefs}
-          ></AgGridReact>
-        </div>
         
+      <LineChart width={800} height={400} data={this.state.data} > 
+        <Line type="monotone" stroke="red" dataKey="positive"> </Line>
+        <Line type="monotone" stroke="green" dataKey="negative"> </Line>
+
+        <XAxis dataKey="date"/>
+        <YAxis/>
+        <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
+      </LineChart>
+
+
+
         <div className="btnContainer">
-          <Button
+        <Button
             variant="contained"
             id="prev"
             sx={{ margin: "10px" }}
