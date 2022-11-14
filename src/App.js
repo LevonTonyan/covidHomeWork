@@ -93,7 +93,7 @@ class App extends React.Component {
     } else if (index >= this.stateList.length) {
       index = 0;
     }
-    console.log(index)
+ 
     axios
       .get(
         `https://api.covidtracking.com/v1/states/${this.stateList[index].toLowerCase()}/daily.json`).then((r) => {
